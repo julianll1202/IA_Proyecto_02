@@ -70,12 +70,35 @@ class ReflexAgent(Agent):
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
+        newFood = successorGameState.getFood().asList()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # print(newFood)
+        # print(newPos)
+        score = 0
+        currentFood = currentGameState.getFood().asList()
+        x,y = newPos
+        for g in range(len(newGhostStates)):
+            ghostPos = newGhostStates[g].getPosition()
+            ghostX, ghostY = ghostPos
+            if newPos == ghostPos:
+                score -= 1
+            else:
+                score += 1
+            nearX = abs(x-ghostX)
+            nearY = abs(y - ghostY)
+            stepsAway = nearY + nearX
+            if stepsAway <= 2:
+                score -= 2
+            if stepsAway <= newScaredTimes[g]:
+                score += stepsAway
+            if newPos in currentFood:
+                score += 2
+            if currentGameState.hasWall(x, y):
+                score -= 2
+        return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -136,7 +159,46 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        howManyGhosts = gameState.getNumAgents()
+        print(gameState.getLegalActions())
+        # Get the 4 legal actions
+        # Generate a successor with each one of them
+        # Evaluate every one
+        # Take the one with the biggest reward
+        rewards = []
+        legalActions = gameState.getLegalActions()
+        for legalAction in legalActions:
+            nextStep = gameState.generateSuccessor(0,legalAction)
+            score = scoreEvaluationFunction(gameState)
+            rewards.append(score)
+        return max(rewards)
+
+    def value(self, gameState: GameState, agentIndex, currentDepth):
+        if currentDepth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        if agentIndex == 0:
+            return self.maxValue(gameState)
+        elif agentIndex >= 1:
+            return self.minValue(gameState)
+        # util.raiseNotDefined()
+    def minValue(self, gameState: GameState, currentDepth):
+        legalActions = gameState
+        succesors = []
+        v = float('inf')
+        for legalAction in legalActions:
+            succesors.append(gameState.generateSuccessor(0, legalAction))
+        for s in succesors:
+            value = min(v, self.value(s, currentDepth+1))
+        return value
+    def maxValue(self, gameState: GameState, currentDepth):
+        legalActions = gameState.getLegalActions()
+        succesors = []
+        v = -float('inf')
+        for legalAction in legalActions:
+            succesors.append(gameState.generateSuccessor(0,legalAction))
+        for s in succesors:
+            value = max(v, self.value(s, currentDepth+1))
+        return v
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
