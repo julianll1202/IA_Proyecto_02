@@ -242,7 +242,91 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actionIndex = 0
+        # la mejor recompensa para MAX
+        alpha = -float('inf')
+        # la mejor recompensa para MIN
+        beta = float('inf')
+        # Iniciamos el valor de la recompensa en - infinito
+        currentMaxValue = -float('inf')
+        # Obtenemos las acciones posibles para pacman (agente 0)
+        legalActions = gameState.getLegalActions(0)
+        # Obtenemos los estados sucesores para cada accion
+        for i in range(len(legalActions)):
+            nextStep = gameState.generateSuccessor(0, legalActions[i])
+            # Obtenemos la utilidad terminal de cada estado sucesor
+            reward = self.value(nextStep, 1, 0, alpha, beta)
+            # Si la recompensa es mayor a la actual, la guardamos
+            if reward > currentMaxValue:
+                currentMaxValue = reward
+                alpha = reward
+                actionIndex = i
+
+        return legalActions[actionIndex]
+
+
+    # Funcion MIN de minimax
+    def minValue(self, gameState: GameState, agentIndex, currentDepth, alpha, beta):
+        # Obtenemos las acciones posibles del jugador (agente)
+        legalActions = gameState.getLegalActions(agentIndex)
+        # Iniciamos v en + infinito
+        v = float('inf')
+        # Obtenemos los estados sucesores para cada accion
+        for legalAction in legalActions:
+            succesor = (gameState.generateSuccessor(agentIndex, legalAction))
+            # Si el siguiente agente(fantasma) es el ultimo, evaluamos a pacman de nuevo
+            if (agentIndex + 1) == gameState.getNumAgents():
+                v = min(v, self.value(succesor, 0, currentDepth + 1, alpha, beta))
+            #     Si no, pasamos al siguiente agente(fantasma)
+            else:
+                v = min(v, self.value(succesor, agentIndex + 1, currentDepth, alpha, beta))
+            if v < alpha:
+                break
+            beta = min(beta, v)
+        return v
+
+
+    # Funcion MAX de minimax (solo para pacman)
+    def maxValue(self, gameState: GameState, agentIndex, currentDepth, alpha, beta):
+        # Obtenemos las acciones de pacman
+        legalActions = gameState.getLegalActions(0)
+        # Iniciamos v en - infinito
+        v = -float('inf')
+        # Obtenemos los estados sucesores para cada accion
+        for action in legalActions:
+            successor = (gameState.generateSuccessor(agentIndex, action))
+            # Obtenemos la recompensa mas grande del agente 1
+            v = max(v, self.value(successor, 1, currentDepth, alpha, beta))
+            if v > beta:
+                break
+            alpha = max(alpha, v)
+        return v
+    # def maxValue(self, gameState, agentIndex, depthSoFar, alpha, beta):
+    #     legal = gameState.getLegalActions(agentIndex)
+    #     x = -float('inf')
+    #     for action in legal:
+    #         successor = gameState.generateSuccessor(agentIndex, action)
+    #         x = max(x, self.value(successor, 1, depthSoFar, alpha, beta))
+    #         if x > beta:
+    #             return x
+    #         alpha = max(alpha, x)
+    #     return x
+
+    # Funcion evaluadora
+    def value(self, gameState: GameState, agentIndex, currentDepth, alpha, beta):
+        # Si el nivel que esta siendo evaluado es igual al limite de profundidad establecido
+        # O el estado es ganador o perdedor
+        if currentDepth == self.depth or gameState.isWin() or gameState.isLose():
+            # Se regresa la utilidad terminal
+            return self.evaluationFunction(gameState)
+        # Si el agente es pacman
+        if agentIndex == 0:
+            # Se llama a la funcion MAX
+            return self.maxValue(gameState, agentIndex, currentDepth, alpha, beta)
+        # Si es un fantasma
+        if agentIndex >= 1:
+            # Se llama a la funcion MIN
+            return self.minValue(gameState, agentIndex, currentDepth, alpha, beta)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
