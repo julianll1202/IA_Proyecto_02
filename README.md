@@ -5,8 +5,8 @@ Score: 1/4
 ### Question 2: Minimax
 Score: 5/5
 
-### Question 3:
-Score:
+### Question 3: Alhpa-Beta Pruning
+Score: 5/5
 
 ### Question 4: 
 Score: 
