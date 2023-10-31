@@ -393,8 +393,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         #         alpha = max(alpha, x)
         #     return x
 
-        # Funcion evaluadora
 
+    # Funcion evaluadora
     def value(self, gameState: GameState, agentIndex, currentDepth):
         # Si el nivel que esta siendo evaluado es igual al limite de profundidad establecido
         # O el estado es ganador o perdedor
@@ -418,7 +418,40 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    foodList = currentGameState.getFood().asList()
+    currentPos = currentGameState.getPacmanPosition()
+    ghosts = currentGameState.getGhostStates()
+    capsuleList = currentGameState.getCapsules()
+    x, y = currentPos
+    score = float(0)
+    if currentGameState.isWin():
+        score += 10
+    elif currentGameState.isLose():
+        score -= 10
+    if currentGameState.hasWall(x, y):
+        score -= 5
+    stepsToFood = []
+    for food in foodList:
+        foodX, foodY = food
+        stepsAway = abs(foodX - x) + abs(foodY - y)
+        stepsToFood.append(stepsAway)
+    score += (1/min(stepsToFood))*15
+    score += (1/len(foodList))*10
+    stepsToCapsule = []
+    for capsule in capsuleList:
+        capX, capY = capsule
+        stepsAway = abs(capX - x) + abs(capY - y)
+        stepsToCapsule.append(stepsAway)
+    score += (1/(len(capsuleList)+1))*20
+    stepsToGhost = []
+    for x in range(len(ghosts)):
+        ghostPos = ghosts[x].getPosition()
+        ghostX, ghostY = ghostPos
+        stepsAway = abs(ghostX - x) + abs(ghostY - y)
+        stepsToGhost.append(stepsAway)
+    score += min(stepsToGhost)
 
+    print(score)
+    return score
 # Abbreviation
 better = betterEvaluationFunction
