@@ -9,7 +9,7 @@ Score: 5/5
 Score: 5/5
 
 ### Question 4: 
-Score: 
+Score: 5/5
 
 ### Question 5: 
 Score: 
