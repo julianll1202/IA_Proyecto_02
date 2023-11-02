@@ -77,27 +77,52 @@ class ReflexAgent(Agent):
         "*** YOUR CODE HERE ***"
         # print(newFood)
         # print(newPos)
-        score = 0
-        currentFood = currentGameState.getFood().asList()
-        x,y = newPos
-        for g in range(len(newGhostStates)):
-            ghostPos = newGhostStates[g].getPosition()
-            ghostX, ghostY = ghostPos
-            if newPos == ghostPos:
-                score -= 1
-            else:
-                score += 1
-            nearX = abs(x-ghostX)
-            nearY = abs(y - ghostY)
-            stepsAway = nearY + nearX
-            if stepsAway <= 2:
-                score -= 2
-            if stepsAway <= newScaredTimes[g]:
-                score += stepsAway
-            if newPos in currentFood:
-                score += 2
-            if currentGameState.hasWall(x, y):
-                score -= 2
+        # score = 0
+        # currentFood = currentGameState.getFood().asList()
+        # x,y = newPos
+        # for g in range(len(newGhostStates)):
+        #     ghostPos = newGhostStates[g].getPosition()
+        #     ghostX, ghostY = ghostPos
+        #     if newPos == ghostPos:
+        #         score -= 1
+        #     else:
+        #         score += 1
+        #     nearX = abs(x-ghostX)
+        #     nearY = abs(y - ghostY)
+        #     stepsAway = nearY + nearX
+        #     if stepsAway <= 2:
+        #         score -= 2
+        #     if stepsAway <= newScaredTimes[g]:
+        #         score += stepsAway
+        #     if newPos in currentFood:
+        #         score += 2
+        #     if currentGameState.hasWall(x, y):
+        #         score -= 2
+        foodList = currentGameState.getFood().asList()
+        currentPos = currentGameState.getPacmanPosition()
+        capsuleList = currentGameState.getCapsules()
+        x, y = currentPos
+        score = successorGameState.getScore()
+        if currentGameState.isWin():
+            return float('inf')
+        elif currentGameState.isLose():
+            return float('-inf')
+        if currentGameState.hasWall(x, y):
+            return -2500
+        stepsToFood = []
+        for food in foodList:
+            foodX, foodY = food
+            stepsAway = abs(foodX - x) + abs(foodY - y)
+            stepsToFood.append(stepsAway)
+        stepsToGhosts = []
+        for ghost in range(len(newGhostStates)):
+            ghostX, ghostY = newGhostStates[ghost].getPosition()
+            stepsAway = abs(ghostX - x) + abs(ghostY - y)
+            stepsToGhosts.append(stepsAway)
+        score -= min(stepsToGhosts)*2
+        score -= min(stepsToFood) * 2
+        score -= len(foodList) * 4
+        score -= len(capsuleList) * 4
         return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
@@ -420,38 +445,57 @@ def betterEvaluationFunction(currentGameState: GameState):
     "*** YOUR CODE HERE ***"
     foodList = currentGameState.getFood().asList()
     currentPos = currentGameState.getPacmanPosition()
-    ghosts = currentGameState.getGhostStates()
     capsuleList = currentGameState.getCapsules()
     x, y = currentPos
-    score = float(0)
+    score = scoreEvaluationFunction(currentGameState)
     if currentGameState.isWin():
-        score += 10
+        return float('inf')
     elif currentGameState.isLose():
-        score -= 10
+        return float('-inf')
     if currentGameState.hasWall(x, y):
-        score -= 5
+        return -2500
     stepsToFood = []
     for food in foodList:
         foodX, foodY = food
         stepsAway = abs(foodX - x) + abs(foodY - y)
         stepsToFood.append(stepsAway)
-    score += (1/min(stepsToFood))*15
-    score += (1/len(foodList))*10
-    stepsToCapsule = []
-    for capsule in capsuleList:
-        capX, capY = capsule
-        stepsAway = abs(capX - x) + abs(capY - y)
-        stepsToCapsule.append(stepsAway)
-    score += (1/(len(capsuleList)+1))*20
-    stepsToGhost = []
-    for x in range(len(ghosts)):
-        ghostPos = ghosts[x].getPosition()
-        ghostX, ghostY = ghostPos
-        stepsAway = abs(ghostX - x) + abs(ghostY - y)
-        stepsToGhost.append(stepsAway)
-    score += min(stepsToGhost)
-
-    print(score)
+    score -= min(stepsToFood)*2
+    score -= len(foodList)*4
+    score -= len(capsuleList)*4
+    #
+    # print(score)
+    # return score
+    # priorizar o estado que causa vitoria
+    # if currentGameState.isWin():
+    #     return float("+inf")
+    #
+    # # postegar o estado de derrota
+    # if currentGameState.isLose():
+    #     return float("-inf")
+    #
+    # # variaveis a serem usadas na calcula da funcao de avaliacao
+    # score = scoreEvaluationFunction(currentGameState)
+    # newFoodList = currentGameState.getFood().asList()
+    # newPos = currentGameState.getPacmanPosition()
+    #
+    # # variaveis nao usadas AINDA!
+    # GhostStates = currentGameState.getGhostStates()
+    # scaredTimes = [ghostState.scaredTimer for ghostState in GhostStates]
+    #
+    # # calcula distancia da comida mais proxima
+    # minDistanceFood = float("+inf")
+    # for foodPos in newFoodList:
+    #     minDistanceFood = min(minDistanceFood, util.manhattanDistance(foodPos, newPos))
+    #
+    # # incentiva o agente a se aproximar mais de comidas
+    # score -= 2 * minDistanceFood
+    #
+    # # incentiva o agente a comer comidas
+    # score -= 4 * len(newFoodList)
+    #
+    # # incentiva o agente a se mover para proximo das capsulas
+    # capsulelocations = currentGameState.getCapsules()
+    # score -= 4 * len(capsulelocations)
     return score
 # Abbreviation
 better = betterEvaluationFunction
