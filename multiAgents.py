@@ -75,55 +75,53 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        # print(newFood)
-        # print(newPos)
-        # score = 0
-        # currentFood = currentGameState.getFood().asList()
-        # x,y = newPos
-        # for g in range(len(newGhostStates)):
-        #     ghostPos = newGhostStates[g].getPosition()
-        #     ghostX, ghostY = ghostPos
-        #     if newPos == ghostPos:
-        #         score -= 1
-        #     else:
-        #         score += 1
-        #     nearX = abs(x-ghostX)
-        #     nearY = abs(y - ghostY)
-        #     stepsAway = nearY + nearX
-        #     if stepsAway <= 2:
-        #         score -= 2
-        #     if stepsAway <= newScaredTimes[g]:
-        #         score += stepsAway
-        #     if newPos in currentFood:
-        #         score += 2
-        #     if currentGameState.hasWall(x, y):
-        #         score -= 2
         foodList = currentGameState.getFood().asList()
-        currentPos = currentGameState.getPacmanPosition()
+        nextFoodList = successorGameState.getFood().asList()
         capsuleList = currentGameState.getCapsules()
-        x, y = currentPos
+        x, y = newPos
         score = successorGameState.getScore()
-        if currentGameState.isWin():
+
+        if successorGameState.isWin():
             return float('inf')
-        elif currentGameState.isLose():
-            return float('-inf')
-        if currentGameState.hasWall(x, y):
+        if successorGameState.hasWall(x, y):
             return -2500
+        # Resta puntos con base en la distancia mas cercana hacia la comida
         stepsToFood = []
         for food in foodList:
             foodX, foodY = food
             stepsAway = abs(foodX - x) + abs(foodY - y)
             stepsToFood.append(stepsAway)
+        score -= min(stepsToFood) * 2
+        # Resta puntos con base en la distancia mas cercana hacia una fantasma
         stepsToGhosts = []
         for ghost in range(len(newGhostStates)):
             ghostX, ghostY = newGhostStates[ghost].getPosition()
             stepsAway = abs(ghostX - x) + abs(ghostY - y)
             stepsToGhosts.append(stepsAway)
-        score -= min(stepsToGhosts)*2
-        score -= min(stepsToFood) * 2
-        score -= len(foodList) * 4
-        score -= len(capsuleList) * 4
+        if min(stepsToGhosts) == 0:
+            return float('-inf')
+        score += min(stepsToGhosts)*2
+
+        # Resta puntos con base en la distancia mas cercana hacia una capsula, si
+        # es que hay una
+        if capsuleList:
+            stepsToCap = []
+            for cap in capsuleList:
+                capX, capY = cap
+                stepsAway = abs(capX - x) + abs(capY - y)
+                stepsToCap.append(stepsAway)
+            score -= min(stepsToCap) * 2
+        #    Si pacman come con esa accion, se le suman 5 puntos al puntaje
+        if len(nextFoodList) < len(foodList):
+            score += 5
+        # Si la accion es detenerse, se restan 10 puntos
+        if action == Directions.STOP:
+            score -= 10
+
+
         return score
+
+
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -438,18 +436,21 @@ def betterEvaluationFunction(currentGameState: GameState):
     x, y = currentPos
     score = scoreEvaluationFunction(currentGameState)
     if currentGameState.isWin():
-        return float('inf')
+        return 10000000
     elif currentGameState.isLose():
-        return float('-inf')
+        return -10000000
     if currentGameState.hasWall(x, y):
         return -2500
     stepsToFood = []
+    # Resta puntos con base en la distancia mas cercana hacia la comida
     for food in foodList:
         foodX, foodY = food
         stepsAway = abs(foodX - x) + abs(foodY - y)
         stepsToFood.append(stepsAway)
     score -= min(stepsToFood)*2
+    # Resta puntos con base en la cantidad de comida restante
     score -= len(foodList)*4
+    # Resta puntos con base en la cantidad de capsulas restantes
     score -= len(capsuleList)*4
     return score
 # Abbreviation
