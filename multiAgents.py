@@ -228,7 +228,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return v
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex,  currentDepth ):
+    def maxValue(self, gameState: GameState,  currentDepth ):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         successors = []
@@ -236,7 +236,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successors.append(gameState.generateSuccessor(agentIndex, action))
+            successors.append(gameState.generateSuccessor(0, action))
         for s in successors:
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(s, 1, currentDepth))
@@ -252,7 +252,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth)
+            return self.maxValue(gameState, currentDepth)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -312,14 +312,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex, currentDepth, alpha, beta):
+    def maxValue(self, gameState: GameState, currentDepth, alpha, beta):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         # Iniciamos v en - infinito
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successor = (gameState.generateSuccessor(agentIndex, action))
+            successor = (gameState.generateSuccessor(0, action))
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(successor, 1, currentDepth, alpha, beta))
             if v > beta:
@@ -338,7 +338,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth, alpha, beta)
+            return self.maxValue(gameState, currentDepth, alpha, beta)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -396,30 +396,19 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return v
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex, currentDepth):
+    def maxValue(self, gameState: GameState, currentDepth):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         # Iniciamos v en - infinito
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successor = (gameState.generateSuccessor(agentIndex, action))
+            successor = (gameState.generateSuccessor(0, action))
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(successor, 1, currentDepth))
         return v
-        # def maxValue(self, gameState, agentIndex, depthSoFar, alpha, beta):
-        #     legal = gameState.getLegalActions(agentIndex)
-        #     x = -float('inf')
-        #     for action in legal:
-        #         successor = gameState.generateSuccessor(agentIndex, action)
-        #         x = max(x, self.value(successor, 1, depthSoFar, alpha, beta))
-        #         if x > beta:
-        #             return x
-        #         alpha = max(alpha, x)
-        #     return x
 
-
-    # Funcion evaluadora
+    # Funcion value
     def value(self, gameState: GameState, agentIndex, currentDepth):
         # Si el nivel que esta siendo evaluado es igual al limite de profundidad establecido
         # O el estado es ganador o perdedor
@@ -429,7 +418,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth)
+            return self.maxValue(gameState, currentDepth)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -462,40 +451,6 @@ def betterEvaluationFunction(currentGameState: GameState):
     score -= min(stepsToFood)*2
     score -= len(foodList)*4
     score -= len(capsuleList)*4
-    #
-    # print(score)
-    # return score
-    # priorizar o estado que causa vitoria
-    # if currentGameState.isWin():
-    #     return float("+inf")
-    #
-    # # postegar o estado de derrota
-    # if currentGameState.isLose():
-    #     return float("-inf")
-    #
-    # # variaveis a serem usadas na calcula da funcao de avaliacao
-    # score = scoreEvaluationFunction(currentGameState)
-    # newFoodList = currentGameState.getFood().asList()
-    # newPos = currentGameState.getPacmanPosition()
-    #
-    # # variaveis nao usadas AINDA!
-    # GhostStates = currentGameState.getGhostStates()
-    # scaredTimes = [ghostState.scaredTimer for ghostState in GhostStates]
-    #
-    # # calcula distancia da comida mais proxima
-    # minDistanceFood = float("+inf")
-    # for foodPos in newFoodList:
-    #     minDistanceFood = min(minDistanceFood, util.manhattanDistance(foodPos, newPos))
-    #
-    # # incentiva o agente a se aproximar mais de comidas
-    # score -= 2 * minDistanceFood
-    #
-    # # incentiva o agente a comer comidas
-    # score -= 4 * len(newFoodList)
-    #
-    # # incentiva o agente a se mover para proximo das capsulas
-    # capsulelocations = currentGameState.getCapsules()
-    # score -= 4 * len(capsulelocations)
     return score
 # Abbreviation
 better = betterEvaluationFunction
