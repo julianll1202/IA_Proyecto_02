@@ -77,27 +77,52 @@ class ReflexAgent(Agent):
         "*** YOUR CODE HERE ***"
         # print(newFood)
         # print(newPos)
-        score = 0
-        currentFood = currentGameState.getFood().asList()
-        x,y = newPos
-        for g in range(len(newGhostStates)):
-            ghostPos = newGhostStates[g].getPosition()
-            ghostX, ghostY = ghostPos
-            if newPos == ghostPos:
-                score -= 1
-            else:
-                score += 1
-            nearX = abs(x-ghostX)
-            nearY = abs(y - ghostY)
-            stepsAway = nearY + nearX
-            if stepsAway <= 2:
-                score -= 2
-            if stepsAway <= newScaredTimes[g]:
-                score += stepsAway
-            if newPos in currentFood:
-                score += 2
-            if currentGameState.hasWall(x, y):
-                score -= 2
+        # score = 0
+        # currentFood = currentGameState.getFood().asList()
+        # x,y = newPos
+        # for g in range(len(newGhostStates)):
+        #     ghostPos = newGhostStates[g].getPosition()
+        #     ghostX, ghostY = ghostPos
+        #     if newPos == ghostPos:
+        #         score -= 1
+        #     else:
+        #         score += 1
+        #     nearX = abs(x-ghostX)
+        #     nearY = abs(y - ghostY)
+        #     stepsAway = nearY + nearX
+        #     if stepsAway <= 2:
+        #         score -= 2
+        #     if stepsAway <= newScaredTimes[g]:
+        #         score += stepsAway
+        #     if newPos in currentFood:
+        #         score += 2
+        #     if currentGameState.hasWall(x, y):
+        #         score -= 2
+        foodList = currentGameState.getFood().asList()
+        currentPos = currentGameState.getPacmanPosition()
+        capsuleList = currentGameState.getCapsules()
+        x, y = currentPos
+        score = successorGameState.getScore()
+        if currentGameState.isWin():
+            return float('inf')
+        elif currentGameState.isLose():
+            return float('-inf')
+        if currentGameState.hasWall(x, y):
+            return -2500
+        stepsToFood = []
+        for food in foodList:
+            foodX, foodY = food
+            stepsAway = abs(foodX - x) + abs(foodY - y)
+            stepsToFood.append(stepsAway)
+        stepsToGhosts = []
+        for ghost in range(len(newGhostStates)):
+            ghostX, ghostY = newGhostStates[ghost].getPosition()
+            stepsAway = abs(ghostX - x) + abs(ghostY - y)
+            stepsToGhosts.append(stepsAway)
+        score -= min(stepsToGhosts)*2
+        score -= min(stepsToFood) * 2
+        score -= len(foodList) * 4
+        score -= len(capsuleList) * 4
         return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
@@ -203,7 +228,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return v
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex,  currentDepth ):
+    def maxValue(self, gameState: GameState,  currentDepth ):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         successors = []
@@ -211,7 +236,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successors.append(gameState.generateSuccessor(agentIndex, action))
+            successors.append(gameState.generateSuccessor(0, action))
         for s in successors:
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(s, 1, currentDepth))
@@ -227,7 +252,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth)
+            return self.maxValue(gameState, currentDepth)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -287,14 +312,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex, currentDepth, alpha, beta):
+    def maxValue(self, gameState: GameState, currentDepth, alpha, beta):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         # Iniciamos v en - infinito
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successor = (gameState.generateSuccessor(agentIndex, action))
+            successor = (gameState.generateSuccessor(0, action))
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(successor, 1, currentDepth, alpha, beta))
             if v > beta:
@@ -313,7 +338,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth, alpha, beta)
+            return self.maxValue(gameState, currentDepth, alpha, beta)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -371,30 +396,19 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return v
 
     # Funcion MAX de minimax (solo para pacman)
-    def maxValue(self, gameState: GameState, agentIndex, currentDepth):
+    def maxValue(self, gameState: GameState, currentDepth):
         # Obtenemos las acciones de pacman
         legalActions = gameState.getLegalActions(0)
         # Iniciamos v en - infinito
         v = -float('inf')
         # Obtenemos los estados sucesores para cada accion
         for action in legalActions:
-            successor = (gameState.generateSuccessor(agentIndex, action))
+            successor = (gameState.generateSuccessor(0, action))
             # Obtenemos la recompensa mas grande del agente 1
             v = max(v, self.value(successor, 1, currentDepth))
         return v
-        # def maxValue(self, gameState, agentIndex, depthSoFar, alpha, beta):
-        #     legal = gameState.getLegalActions(agentIndex)
-        #     x = -float('inf')
-        #     for action in legal:
-        #         successor = gameState.generateSuccessor(agentIndex, action)
-        #         x = max(x, self.value(successor, 1, depthSoFar, alpha, beta))
-        #         if x > beta:
-        #             return x
-        #         alpha = max(alpha, x)
-        #     return x
 
-        # Funcion evaluadora
-
+    # Funcion value
     def value(self, gameState: GameState, agentIndex, currentDepth):
         # Si el nivel que esta siendo evaluado es igual al limite de profundidad establecido
         # O el estado es ganador o perdedor
@@ -404,7 +418,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         # Si el agente es pacman
         if agentIndex == 0:
             # Se llama a la funcion MAX
-            return self.maxValue(gameState, agentIndex, currentDepth)
+            return self.maxValue(gameState, currentDepth)
         # Si es un fantasma
         if agentIndex >= 1:
             # Se llama a la funcion MIN
@@ -418,7 +432,25 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    foodList = currentGameState.getFood().asList()
+    currentPos = currentGameState.getPacmanPosition()
+    capsuleList = currentGameState.getCapsules()
+    x, y = currentPos
+    score = scoreEvaluationFunction(currentGameState)
+    if currentGameState.isWin():
+        return float('inf')
+    elif currentGameState.isLose():
+        return float('-inf')
+    if currentGameState.hasWall(x, y):
+        return -2500
+    stepsToFood = []
+    for food in foodList:
+        foodX, foodY = food
+        stepsAway = abs(foodX - x) + abs(foodY - y)
+        stepsToFood.append(stepsAway)
+    score -= min(stepsToFood)*2
+    score -= len(foodList)*4
+    score -= len(capsuleList)*4
+    return score
 # Abbreviation
 better = betterEvaluationFunction
