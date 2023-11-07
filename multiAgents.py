@@ -76,11 +76,9 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
         foodList = currentGameState.getFood().asList()
-        nextFoodList = successorGameState.getFood().asList()
         capsuleList = currentGameState.getCapsules()
         x, y = newPos
-        score = successorGameState.getScore()
-
+        score = float(0)
         if successorGameState.isWin():
             return float('inf')
         if successorGameState.hasWall(x, y):
@@ -91,7 +89,10 @@ class ReflexAgent(Agent):
             foodX, foodY = food
             stepsAway = abs(foodX - x) + abs(foodY - y)
             stepsToFood.append(stepsAway)
-        score -= min(stepsToFood) * 2
+        if min(stepsToFood) == 0:
+            score += 5
+        else:
+            score -= min(stepsToFood) * 2
         # Resta puntos con base en la distancia mas cercana hacia una fantasma
         stepsToGhosts = []
         for ghost in range(len(newGhostStates)):
@@ -112,13 +113,11 @@ class ReflexAgent(Agent):
                 stepsToCap.append(stepsAway)
             score -= min(stepsToCap) * 2
         #    Si pacman come con esa accion, se le suman 5 puntos al puntaje
-        if len(nextFoodList) < len(foodList):
+        if len(newFood) < len(foodList):
             score += 5
         # Si la accion es detenerse, se restan 10 puntos
         if action == Directions.STOP:
             score -= 10
-
-
         return score
 
 
@@ -182,13 +181,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        # howManyGhosts = gameState.getNumAgents()
-
-        # Get the 4 legal actions
-        # Generate a successor with each one of them
-        # Evaluate every one
-        # Take the one with the biggest reward
-
         actionIndex = 0
         # Iniciamos el valor de la recompensa en - infinito
         currentMaxValue = -float('inf')
@@ -433,25 +425,41 @@ def betterEvaluationFunction(currentGameState: GameState):
     foodList = currentGameState.getFood().asList()
     currentPos = currentGameState.getPacmanPosition()
     capsuleList = currentGameState.getCapsules()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
     x, y = currentPos
-    score = scoreEvaluationFunction(currentGameState)
+    # score = scoreEvaluationFunction(currentGameState)
+    score = float(0)
     if currentGameState.isWin():
-        return 10000000
+        score += 10000000
     elif currentGameState.isLose():
-        return -10000000
-    if currentGameState.hasWall(x, y):
-        return -2500
+        score -= -10000000
+
     stepsToFood = []
     # Resta puntos con base en la distancia mas cercana hacia la comida
     for food in foodList:
         foodX, foodY = food
-        stepsAway = abs(foodX - x) + abs(foodY - y)
-        stepsToFood.append(stepsAway)
-    score -= min(stepsToFood)*2
+        stepsAway = abs(foodX-x) + abs(foodY-y)
+        stepsToFood.append(-1.0/stepsAway)
+    if len(stepsToFood) > 0:
+        if max(stepsToFood) >= 0:
+            score -= max(stepsToFood)*0.25
+    stepsToGhosts = []
+    for ghost in range(len(newGhostStates)):
+        ghostX, ghostY = newGhostStates[ghost].getPosition()
+        stepsAway = abs(ghostX-x) + abs(ghostY-y)
+        if stepsAway <= newScaredTimes[ghost]:
+            score += stepsAway*2
+        stepsToGhosts.append(-1.0*stepsAway)
+    if min(stepsToGhosts) == 0:
+        return float('-inf')
+    score += min(stepsToGhosts)*2
     # Resta puntos con base en la cantidad de comida restante
     score -= len(foodList)*4
     # Resta puntos con base en la cantidad de capsulas restantes
     score -= len(capsuleList)*4
+    # Agrega como extra, el puntaje de la funcion evaluadora original
+    score += currentGameState.getScore()
     return score
 # Abbreviation
 better = betterEvaluationFunction
